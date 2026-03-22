@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import api from '../api';
 
 export default function RegisterChild() {
@@ -37,11 +38,11 @@ export default function RegisterChild() {
   };
 
   return (
-    <div style={{maxWidth: '800px'}}>
+    <motion.div style={{maxWidth: '800px'}} initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{duration:0.4}}>
       <h1 className="page-title">Register a Missing Child</h1>
-      <div className="card">
-        {msg && <div style={{background:'var(--success)', color:'white', padding:'10px', borderRadius:'8px', marginBottom:'1rem'}}>{msg}</div>}
-        {err && <div style={{background:'var(--danger)', color:'white', padding:'10px', borderRadius:'8px', marginBottom:'1rem'}}>{err}</div>}
+      <motion.div className="card" initial={{scale:0.95}} animate={{scale:1}} transition={{duration:0.4, delay:0.1}}>
+        {msg && <div style={{background:'rgba(52, 211, 153, 0.1)', color:'var(--success)', border: '1px solid var(--success)', padding:'12px', borderRadius:'12px', marginBottom:'1.5rem', fontWeight:'600'}}>{msg}</div>}
+        {err && <div style={{background:'rgba(244, 63, 94, 0.1)', color:'var(--danger)', border: '1px solid var(--danger)', padding:'12px', borderRadius:'12px', marginBottom:'1.5rem', fontWeight:'600'}}>{err}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
@@ -70,11 +71,11 @@ export default function RegisterChild() {
             <label>Upload Photo</label>
             <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} required style={{background:'transparent', border:'1px dashed var(--primary-light)', padding:'2rem', textAlign:'center', cursor:'pointer'}} />
           </div>
-          <button type="submit" className="btn-primary" disabled={loading} style={{marginTop:'2rem'}}>
-            {loading ? 'Processing...' : 'Register Case'}
+          <button type="submit" className="btn-primary" disabled={loading} style={{marginTop:'2.5rem', width: '100%', fontSize: '1.1rem', padding: '1rem', boxShadow: 'var(--shadow-glow)'}}>
+            {loading ? 'Processing Registration...' : 'Register Case'}
           </button>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

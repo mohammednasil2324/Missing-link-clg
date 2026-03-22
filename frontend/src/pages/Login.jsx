@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import api from '../api';
 
 export default function Login({ onLogin }) {
@@ -33,14 +34,23 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card" style={{ flexWrap: 'wrap' }}>
-        <h1 className="app-title">Missing Link: AI-Powered Child Identification</h1>
+      <motion.div 
+        className="auth-card" 
+        style={{ flexWrap: 'wrap' }}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <h1 className="app-title" style={{ width: '100%', textAlign: 'center' }}>Missing Link: AI-Powered Child Identification</h1>
         
-        {error && <div style={{width:'100%', color:'white', background:'var(--danger)', padding:'10px', borderRadius:'8px', textAlign:'center'}}>{error}</div>}
-        {msg && <div style={{width:'100%', color:'white', background:'var(--success)', padding:'10px', borderRadius:'8px', textAlign:'center'}}>{msg}</div>}
+        {error && <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{width:'100%', color:'white', background:'rgba(244, 63, 94, 0.8)', border: '1px solid var(--danger)', padding:'12px', borderRadius:'12px', textAlign:'center', fontWeight: '600'}}>{error}</motion.div>}
+        {msg && <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{width:'100%', color:'white', background:'rgba(52, 211, 153, 0.8)', border: '1px solid var(--success)', padding:'12px', borderRadius:'12px', textAlign:'center', fontWeight: '600'}}>{msg}</motion.div>}
         
         <div style={{ flex: '1 1 300px' }}>
-          <h2 style={{color:'var(--primary-light)', marginBottom:'1.5rem'}}>Login</h2>
+          <h2 style={{color:'var(--primary-light)', marginBottom:'1.5rem', display: 'flex', alignItems: 'center', gap: '10px'}}>
+            <div style={{width: '8px', height: '24px', background: 'var(--primary-gradient)', borderRadius: '4px'}}></div>
+            Login Space
+          </h2>
           <form onSubmit={handleLogin}>
             <div className="input-group">
               <label>Username</label>
@@ -54,8 +64,11 @@ export default function Login({ onLogin }) {
           </form>
         </div>
 
-        <div style={{ flex: '1 1 300px', borderLeft: '1px solid var(--border-light)', paddingLeft: '3rem' }}>
-          <h2 style={{color:'var(--primary-light)', marginBottom:'1.5rem'}}>Register</h2>
+        <div style={{ flex: '1 1 300px', borderLeft: '1px solid rgba(148, 163, 184, 0.1)', paddingLeft: '3rem' }}>
+          <h2 style={{color:'var(--primary-light)', marginBottom:'1.5rem', display: 'flex', alignItems: 'center', gap: '10px'}}>
+            <div style={{width: '8px', height: '24px', background: 'var(--primary-gradient)', borderRadius: '4px'}}></div>
+            New Agent Registration
+          </h2>
           <form onSubmit={handleRegister}>
             <div className="input-group">
               <label>New Username</label>
@@ -79,10 +92,10 @@ export default function Login({ onLogin }) {
                 <input type="password" value={registerForm.inviteCode || ''} onChange={e => setRegisterForm({...registerForm, inviteCode: e.target.value})} placeholder={`Enter Invite Code for ${registerForm.role}`} required />
               </div>
             )}
-            <button type="submit" className="btn-primary" style={{marginTop:'1rem', background:'var(--bg-color)', color:'var(--primary-light)', border:'1px solid var(--primary-light)'}}>Create Account</button>
+            <button type="submit" className="btn-primary" style={{marginTop:'1.5rem', background:'rgba(15, 23, 42, 0.8)', color:'var(--primary-light)', border:'1px solid var(--primary-light)', boxShadow: '0 0 15px rgba(56, 189, 248, 0.1)'}}>Create Account</button>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

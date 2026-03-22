@@ -39,7 +39,10 @@ export default function Dashboard({ user }) {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-      <motion.h1 variants={itemVariants} className="page-title">Mission Overview</motion.h1>
+      <motion.h1 variants={itemVariants} className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{width: '6px', height: '32px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+        Mission Overview
+      </motion.h1>
       
       <motion.div variants={containerVariants} className="stats-grid">
         <motion.div variants={itemVariants} className="card">
@@ -56,7 +59,10 @@ export default function Dashboard({ user }) {
         </motion.div>
       </motion.div>
 
-      <motion.h2 variants={itemVariants} style={{color:'var(--primary)', marginBottom:'1.5rem', marginTop:'3rem'}}>Recent Activity</motion.h2>
+      <motion.h2 variants={itemVariants} style={{color:'var(--text-main)', marginBottom:'1.5rem', marginTop:'3rem', display: 'flex', alignItems: 'center', gap: '10px'}}>
+        <div style={{width: '6px', height: '24px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+        Recent Network Activity
+      </motion.h2>
       
       {recent.length === 0 ? (
         <motion.div variants={itemVariants} className="card" style={{textAlign:'center', color:'var(--text-muted)'}}>No recent alerts found.</motion.div>

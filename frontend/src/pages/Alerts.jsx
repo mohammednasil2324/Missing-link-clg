@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
 export default function Alerts() {
@@ -28,19 +29,22 @@ export default function Alerts() {
   };
 
   return (
-    <div>
-      <h1 className="page-title">Alerts Board</h1>
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.4}}>
+      <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{width: '6px', height: '32px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+        Alerts Board
+      </h1>
       
       <div style={{display:'flex', gap:'1rem', marginBottom:'2rem', borderBottom:'1px solid var(--border-light)', paddingBottom:'1rem'}}>
         <button 
           onClick={() => setTab('new')}
-          style={{background:'none', border:'none', fontSize:'1.2rem', fontWeight:600, color: tab === 'new' ? 'var(--primary-light)' : 'var(--text-muted)', cursor:'pointer', borderBottom: tab === 'new' ? '2px solid var(--primary-light)' : 'none', paddingBottom:'0.5rem'}}
+          style={{background:'none', border:'none', fontSize:'1.2rem', fontWeight:600, color: tab === 'new' ? 'var(--text-main)' : 'var(--text-muted)', cursor:'pointer', borderBottom: tab === 'new' ? '2px solid var(--primary-light)' : 'none', paddingBottom:'0.5rem'}}
         >
           🆕 New Alerts
         </button>
         <button 
           onClick={() => setTab('archive')}
-          style={{background:'none', border:'none', fontSize:'1.2rem', fontWeight:600, color: tab === 'archive' ? 'var(--primary-light)' : 'var(--text-muted)', cursor:'pointer', borderBottom: tab === 'archive' ? '2px solid var(--primary-light)' : 'none', paddingBottom:'0.5rem'}}
+          style={{background:'none', border:'none', fontSize:'1.2rem', fontWeight:600, color: tab === 'archive' ? 'var(--text-main)' : 'var(--text-muted)', cursor:'pointer', borderBottom: tab === 'archive' ? '2px solid var(--primary-light)' : 'none', paddingBottom:'0.5rem'}}
         >
           ✅ Archive
         </button>
@@ -50,10 +54,19 @@ export default function Alerts() {
         {alerts.length === 0 ? (
           <div className="card" style={{color:'var(--text-muted)'}}>No alerts in this category.</div>
         ) : (
-          alerts.map(a => {
+          <AnimatePresence>
+          {alerts.map((a, idx) => {
             const isHighConf = a.confidence > 80;
             return (
-              <div key={a.id} className="card" style={{borderLeft: `5px solid ${isHighConf ? 'var(--danger)' : 'var(--warning)'}`}}>
+              <motion.div 
+                key={a.id} 
+                className="card" 
+                style={{borderLeft: `5px solid ${isHighConf ? 'var(--danger)' : 'var(--warning)'}`}}
+                initial={{opacity: 0, y: 20}}
+                animate={{opacity: 1, y: 0}}
+                exit={{opacity: 0, scale: 0.95}}
+                transition={{delay: idx * 0.1}}
+              >
                 <div style={{display:'flex', justifyContent:'space-between'}}>
                   <h3 style={{margin:0, color:'var(--primary-light)'}}>{a.message}</h3>
                   <span style={{color:'var(--text-muted)', fontSize:'0.85rem'}}>{a.created_at}</span>
@@ -76,11 +89,12 @@ export default function Alerts() {
                     Resolve / Mark as Read
                   </button>
                 )}
-              </div>
+              </motion.div>
             );
-          })
+          })}
+          </AnimatePresence>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

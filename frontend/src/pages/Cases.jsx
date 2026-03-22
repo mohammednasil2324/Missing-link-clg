@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
 export default function Cases() {
@@ -36,8 +37,11 @@ export default function Cases() {
   };
 
   return (
-    <div>
-      <h1 className="page-title">Case Management</h1>
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.4}}>
+      <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{width: '6px', height: '32px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+        Case Management
+      </h1>
       
       <form onSubmit={handleSearch} style={{marginBottom:'2rem', display:'flex', gap:'1rem', maxWidth:'600px'}}>
         <div className="input-group" style={{flex:1, marginBottom:0}}>
@@ -55,8 +59,17 @@ export default function Cases() {
         {cases.length === 0 ? (
           <div className="card" style={{color:'var(--text-muted)'}}>No matching cases found.</div>
         ) : (
-          cases.map(c => (
-            <div key={c.id} className="card case-card">
+          <AnimatePresence>
+          {cases.map((c, idx) => (
+            <motion.div 
+              key={c.id} 
+              className="card case-card"
+              initial={{opacity:0, y:20}}
+              animate={{opacity:1, y:0}}
+              exit={{opacity:0, scale:0.95}}
+              transition={{delay: idx * 0.1}}
+              style={{background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(12px)'}}
+            >
               <img src={`http://127.0.0.1:8000/${c.photo_path}`} className="case-img" />
               
               <div className="case-info">
@@ -97,10 +110,11 @@ export default function Cases() {
                   </button>
                 )}
               </div>
-            </div>
-          ))
+            </motion.div>
+          ))}
+          </AnimatePresence>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

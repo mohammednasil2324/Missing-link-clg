@@ -70,7 +70,10 @@ export default function Search() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-      <motion.h1 variants={itemVariants} className="page-title">Identify a Found Child</motion.h1>
+      <motion.h1 variants={itemVariants} className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{width: '6px', height: '32px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+        Identify a Found Child
+      </motion.h1>
       
       <motion.div variants={itemVariants} className="card" style={{maxWidth:'600px'}}>
         <div className="input-group">
@@ -95,13 +98,16 @@ export default function Search() {
           {loading ? 'Scanning Database...' : 'Search Database'}
         </button>
         
-        {err && <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{marginTop:'1rem', color:'white', background:'var(--danger)', padding:'10px', borderRadius:'8px', textAlign:'center'}}>{err}</motion.div>}
+        {err && <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{marginTop:'1.5rem', color:'var(--danger)', background:'rgba(244, 63, 94, 0.1)', border: '1px solid var(--danger)', padding:'12px', borderRadius:'12px', textAlign:'center', fontWeight: '600'}}>{err}</motion.div>}
       </motion.div>
 
       <AnimatePresence>
         {matches && matches.length > 0 && (
           <motion.div initial="hidden" animate="visible" variants={containerVariants} style={{marginTop:'3rem'}}>
-            <motion.h2 variants={itemVariants} style={{color:'var(--primary)', marginBottom:'1.5rem'}}>Found {matches.length} Potential Matches</motion.h2>
+            <motion.h2 variants={itemVariants} style={{color:'var(--text-main)', marginBottom:'1.5rem', display: 'flex', alignItems: 'center', gap: '10px'}}>
+              <div style={{width: '6px', height: '24px', background: 'var(--primary-gradient)', borderRadius: '3px'}}></div>
+              Found {matches.length} Potential Matches
+            </motion.h2>
             
             <div style={{display:'flex', flexDirection:'column', gap:'2rem'}}>
               {matches.map((m, idx) => (
@@ -117,7 +123,7 @@ export default function Search() {
                     Last seen: {m.child.location} | Age: {m.child.age}
                   </p>
                   
-                  <div style={{width:'100%', background:'#e1e8f0', borderRadius:'10px', height:'10px', marginBottom:'20px'}}>
+                  <div style={{width:'100%', background:'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius:'10px', height:'10px', marginBottom:'20px'}}>
                     <motion.div 
                       initial={{width: 0}}
                       animate={{width: `${Math.min(m.confidence, 100)}%`}}
