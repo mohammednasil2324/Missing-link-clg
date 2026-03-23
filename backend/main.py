@@ -12,9 +12,9 @@ from pydantic import BaseModel
 import pyotp
 from twilio.rest import Client
 
-from backend.database import get_db_connection, init_db
-from backend.auth import login_user, register_new_user, create_access_token, verify_token
-from backend.ai_engine import get_face_encoding, compare_faces, simulate_age_progression
+from database import get_db_connection, init_db
+from auth import login_user, register_new_user, create_access_token, verify_token
+from ai_engine import get_face_encoding, compare_faces, simulate_age_progression
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "mock_sid")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "mock_token")
