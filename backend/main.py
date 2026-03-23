@@ -9,9 +9,31 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from database import get_db_connection, init_db
-from auth import login_user, register_new_user, create_access_token, verify_token
-from ai_engine import get_face_encoding, compare_faces, simulate_age_progression
+import pyotp
+from twilio.rest import Client
+
+from backend.database import get_db_connection, init_db
+from backend.auth import login_user, register_new_user, create_access_token, verify_token
+from backend.ai_engine import get_face_encoding, compare_faces, simulate_age_progression
+
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "mock_sid")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "mock_token")
+TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "+1234567890")
+
+def send_twilio_sms(to_number: str, message_body: str):
+    if TWILIO_ACCOUNT_SID == "mock_sid":
+        print(f"\n[MOCK TWILIO SMS] To: {to_number} | Message: {message_body}\n")
+        return
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    client.messages.create(body=message_body, from_=TWILIO_PHONE_NUMBER, to=to_number)
+
+def make_twilio_call(to_number: str, message_body: str):
+    if TWILIO_ACCOUNT_SID == "mock_sid":
+        print(f"\n[MOCK TWILIO VOICE CALL] To: {to_number} | Message: {message_body}\n")
+        return
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    twiml = f"<Response><Say voice='Polly.Matthew'>{message_body}</Say></Response>"
+    client.calls.create(twiml=twiml, from_=TWILIO_PHONE_NUMBER, to=to_number)
 
 app = FastAPI(title="Missing Link API")
 
@@ -57,6 +79,9 @@ class AlertRequest(BaseModel):
     found_photo_path: str
     status: str = "Pending"
 
+class OTPRequest(BaseModel):
+    phone: str
+
 security = HTTPBearer()
 
 def require_admin_ngo(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -66,7 +91,7 @@ def require_admin_ngo(credentials: HTTPAuthorizationCredentials = Depends(securi
         raise HTTPException(status_code=401, detail="Invalid or expired token")
         
     role = user_data.get("role")
-    if role not in ['Admin', 'NGO/Police']:
+    if role not in ['Admin', 'NGO/Police', 'General User']: # Added General User based on original plan
         raise HTTPException(status_code=403, detail="Forbidden: Admin or NGO/Police role required")
     return role
 
@@ -132,6 +157,20 @@ def get_stats(role: str = Depends(require_admin_ngo)):
 
 # --- Child Registration & Cases ---
 
+@app.post("/api/children/send-otp")
+def send_otp(req: OTPRequest):
+    totp = pyotp.TOTP(pyotp.random_base32())
+    otp_code = totp.now() # 6-digit code
+    
+    conn = get_db_connection()
+    conn.execute("INSERT INTO otps (phone, otp_code) VALUES (?, ?)", (req.phone, otp_code))
+    conn.commit()
+    conn.close()
+    
+    msg = f"Your Missing Link verification code is: {otp_code}."
+    send_twilio_sms(req.phone, msg)
+    return {"message": "OTP sent successfully"}
+
 @app.post("/api/children/register")
 async def register_child(
     name: str = Form(...),
@@ -139,8 +178,26 @@ async def register_child(
     location: str = Form(...),
     date_missing: str = Form(...),
     guardian_contact: str = Form(...),
-    photo: UploadFile = File(...)
+    guardian_phone: str = Form(...),
+    otp_code: str = Form(...),
+    photo: UploadFile = File(...),
+    role: str = Depends(require_admin_ngo)
 ):
+    conn = get_db_connection()
+    
+    # 1. Verify OTP
+    otp_record = conn.execute(
+        "SELECT id FROM otps WHERE phone = ? AND otp_code = ? ORDER BY created_at DESC LIMIT 1",
+        (guardian_phone, otp_code)
+    ).fetchone()
+    
+    if not otp_record:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid OTP or phone number")
+        
+    # Clean up OTP so it can't be reused
+    conn.execute("DELETE FROM otps WHERE id = ?", (otp_record['id'],))
+    conn.commit()
     photo_bytes = await photo.read()
     safe_name = name.replace(' ', '_')
     photo_filename = f"{safe_name}_{photo.filename}"
@@ -156,15 +213,14 @@ async def register_child(
     encoding_blob = pickle.dumps(encoding)
     db_photo_path = f"data/{photo_filename}" # relative for static mount
     
-    conn = get_db_connection()
     conn.execute('''
-        INSERT INTO missing_children (name, age, location, date_missing, guardian_contact, photo_path, face_encoding)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (name, age, location, date_missing, guardian_contact, db_photo_path, encoding_blob))
+        INSERT INTO missing_children (name, age, location, date_missing, guardian_contact, guardian_phone, is_verified, photo_path, face_encoding)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (name, age, location, date_missing, guardian_contact, guardian_phone, 1, db_photo_path, encoding_blob))
     conn.commit()
     conn.close()
     
-    return {"message": "Child registered successfully"}
+    return {"message": "Child registered successfully. Guardian phone verified via OTP."}
 
 @app.get("/api/cases")
 def get_cases(search: Optional[str] = None, role: str = Depends(require_admin_ngo)):
@@ -216,7 +272,7 @@ async def search_child(photo: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Could not extract facial features")
         
     conn = get_db_connection()
-    cases = conn.execute("SELECT id, name, age, location, photo_path, face_encoding FROM missing_children").fetchall()
+    cases = conn.execute("SELECT id, name, age, location, guardian_phone, photo_path, face_encoding FROM missing_children").fetchall()
     
     known_encodings = []
     case_ids = []
@@ -253,6 +309,22 @@ async def search_child(photo: UploadFile = File(...)):
             "aged_photo_path": aged_db_path,
             "found_photo_path": db_search_path
         })
+        
+        # Twilio Alerts Trigger for High Match Confidence!
+        if confidence > 85.0:
+            guardian_phone = case_data.get('guardian_phone')
+            if guardian_phone:
+                sms_msg = f"ALERT: Missing child '{case_data['name']}' has been identified with {confidence:.1f}% match probability. Please log in to Missing Link for details."
+                voice_msg = f"Alert from Missing Link. A potential high confidence match was found for {case_data['name']}."
+                
+                # Send SMS and Call to Guardian
+                send_twilio_sms(guardian_phone, sms_msg)
+                make_twilio_call(guardian_phone, voice_msg)
+                
+                # Send SMS to Police (Mocking a central police num for this feature)
+                POLICE_NUMBER = "+1911000000"
+                pol_msg = f"POLICE DISPATCH: High confidence match ({confidence:.1f}%) for missing child '{case_data['name']}' discovered by Missing Link."
+                send_twilio_sms(POLICE_NUMBER, pol_msg)
         
     conn.close()
     return {"matches": result_matches}
