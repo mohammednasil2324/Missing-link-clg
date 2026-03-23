@@ -8,3 +8,4 @@ cryptography
 fastapi
 uvicorn
 python-multipart
+pyotp
