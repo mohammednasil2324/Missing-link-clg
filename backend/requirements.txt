@@ -11,3 +11,4 @@ pyotp
 twilio
 pandas
 streamlit
+git+https://github.com/ageitgey/face_recognition_models
