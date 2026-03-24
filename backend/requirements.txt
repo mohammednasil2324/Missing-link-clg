@@ -1,14 +1,16 @@
 fastapi
 uvicorn
+gunicorn
 python-multipart
 pydantic
-numpy
+numpy<2.0.0
 pillow
 opencv-python-headless
 face_recognition
 cryptography
 pyotp
 twilio
+PyJWT
 pandas
 streamlit
 git+https://github.com/ageitgey/face_recognition_models.git

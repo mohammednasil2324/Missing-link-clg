@@ -377,4 +377,7 @@ def mark_alert_read(alert_id: int, role: str = Depends(require_admin_ngo)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    # Provide helpful output in case of local running
+    print(f"Starting uvicorn on port {port}...")
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
