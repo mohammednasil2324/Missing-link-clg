@@ -13,4 +13,4 @@ twilio
 PyJWT
 pandas
 streamlit
-git+https://github.com/ageitgey/face_recognition_models.git
+face-recognition-models>=0.3.0

@@ -14,6 +14,14 @@ from twilio.rest import Client
 
 from database import get_db_connection, init_db
 from auth import login_user, register_new_user, create_access_token, verify_token
+try:
+    import face_recognition_models
+    print(f"DEBUG: Found face_recognition_models at {face_recognition_models.__file__}")
+except ImportError:
+    print("DEBUG: face_recognition_models NOT FOUND during startup check.")
+except Exception as e:
+    print(f"DEBUG: Error importing face_recognition_models: {e}")
+
 from ai_engine import get_face_encoding, compare_faces, simulate_age_progression
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "mock_sid")
